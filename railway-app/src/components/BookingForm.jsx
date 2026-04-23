@@ -1,3 +1,5 @@
+import styles from './BookingForm.module.css';
+
 const BookingForm = ({ onSubmit, selectedSeatsCount }) => {
     if (selectedSeatsCount === 0) return null;
 
@@ -12,21 +14,27 @@ const BookingForm = ({ onSubmit, selectedSeatsCount }) => {
     };
 
     return (
-        <form className="form-container" onSubmit={handleSubmit}>
-            <h4>Оформлення квитків (Обрано місць: {selectedSeatsCount})</h4>
-            <div className="form-group">
+        <form className={styles.formContainer} onSubmit={handleSubmit}>
+            <h4>Оформлення квитків (Обрано: {selectedSeatsCount})</h4>
+            
+            <div className={styles.formGroup}>
                 <label>ПІБ пасажира</label>
-                <input type="text" name="name" className="form-input" required />
+                <input type="text" name="name" className={styles.formInput} required />
             </div>
-            <div className="form-group">
+            
+            <div className={styles.formGroup}>
                 <label>Телефон</label>
-                <input type="tel" name="phone" className="form-input" required pattern="[0-9]{10,13}" placeholder="+380..." />
+                <input type="tel" name="phone" className={styles.formInput} required pattern="[0-9]{10,13}" placeholder="+380..." />
             </div>
-            <div className="form-group">
+            
+            <div className={styles.formGroup}>
                 <label>Email</label>
-                <input type="email" name="email" className="form-input" required />
+                <input type="email" name="email" className={styles.formInput} required />
             </div>
-            <button type="submit" className="btn-primary" style={{ width: '100%' }}>Підтвердити бронювання</button>
+            
+            <button type="submit" className={styles.submitBtn}>
+                Підтвердити бронювання
+            </button>
         </form>
     );
 };
