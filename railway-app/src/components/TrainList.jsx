@@ -1,14 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TrainCard from './TrainCard';
-import { trainsData } from '../data/trains';
+import { api } from '../services/api';
 
 const TrainList = () => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [trains, setTrains] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const filteredTrains = trainsData.filter(train => 
+    useEffect(() => {
+        const fetchTrains = async () => {
+            setIsLoading(true);
+            const data = await api.getTrains();
+            setTrains(data);
+            setIsLoading(false);
+        };
+        fetchTrains();
+    }, []);
+
+    const filteredTrains = trains.filter(train => 
         train.route.toLowerCase().includes(searchQuery.toLowerCase()) ||
         train.trainNumber.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    if (isLoading) return <div className="state-message">Завантаження розкладу (API-запит)...</div>;
 
     return (
         <div className="list-container">
