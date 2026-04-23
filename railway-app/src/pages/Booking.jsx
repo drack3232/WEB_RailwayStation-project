@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
 import { trainsData } from '../data/trains';
-import { BookingService } from '../services/BookingService';
+import { useBooking } from '../context/BookingContext';
 import WagonSelector from '../components/WagonSelector';
 import SeatMap from '../components/SeatMap';
 import BookingForm from '../components/BookingForm';
@@ -15,38 +16,42 @@ const Booking = () => {
     const { trainId } = useParams();
     const navigate = useNavigate();
     const train = trainsData.find(t => t.id === trainId);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [selectedWagon, setSelectedWagon] = useState(mockWagons[0].id);
-    const [selectedSeats, setSelectedSeats] = useState([]);
-    const [bookedSeats, setBookedSeats] = useState([]);
+    const {
+        selectedWagon, 
+        setSelectedWagon,
+        selectedSeats, 
+        toggleSeat, 
+        clearSelection,
+        bookedSeats, 
+        setBookedSeats
+    } = useBooking();
 
     useEffect(() => {
-        const booked = BookingService.getBookedSeats(trainId, selectedWagon);
-        setBookedSeats(booked);
-        setSelectedSeats([]);
+        const fetchSeats = async () => {
+            const booked = await api.getBookedSeats(trainId, selectedWagon);
+            setBookedSeats(booked);
+            clearSelection();
+        };
+        fetchSeats();
     }, [trainId, selectedWagon]);
 
-    const handleSeatToggle = (seatNumber) => {
-        if (selectedSeats.includes(seatNumber)) {
-            setSelectedSeats(selectedSeats.filter(s => s !== seatNumber));
-        } else {
-            setSelectedSeats([...selectedSeats, seatNumber]);
-        }
-    };
-
-    const handleBookingSubmit = (passengerData) => {
-        BookingService.saveBooking({
+    const handleBookingSubmit = async (passengerData) => {
+        setIsSubmitting(true);
+        await api.saveBooking({
             trainId,
             wagonId: selectedWagon,
             seats: selectedSeats,
             passenger: passengerData
         });
+        setIsSubmitting(false);
         alert(`Успішно! Квитки на потяг ${train.trainNumber} заброньовано.`);
+        clearSelection();
         navigate('/');
     };
 
     if (!train) return <div className="state-message">Рейс не знайдено</div>;
-
     const currentWagonInfo = mockWagons.find(w => w.id === selectedWagon);
 
     return (
@@ -64,14 +69,18 @@ const Booking = () => {
                         totalSeats={currentWagonInfo.totalSeats} 
                         bookedSeats={bookedSeats} 
                         selectedSeats={selectedSeats} 
-                        onSeatToggle={handleSeatToggle} 
+                        onSeatToggle={toggleSeat} 
                     />
                 </div>
                 <div className="booking-sidebar">
-                    <BookingForm 
-                        selectedSeatsCount={selectedSeats.length} 
-                        onSubmit={handleBookingSubmit} 
-                    />
+                    {isSubmitting ? (
+                        <div className="state-message">Обробка транзакції...</div>
+                    ) : (
+                        <BookingForm 
+                            selectedSeatsCount={selectedSeats.length} 
+                            onSubmit={handleBookingSubmit} 
+                        />
+                    )}
                 </div>
             </div>
         </div>
